@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+
+- Changed: the project is now called AutoFertilizer, without "Plugin", and lives at
+  github.com/TheElevatedOne/AutoFertilizer (the old address redirects). The release zip is
+  `AutoFertilizer-<version>.zip`. The DLL stays `AutoFertilizer.dll`, with no spaces; delete the original's
+  `MHW Auto Fertilizer Plugin.dll` if you still have it.
+
 ## 1.2.0
 
 - Added: `HubOnly` (`true` by default). While a quest is set, the plugin reads only the game's quest state, one

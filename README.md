@@ -1,4 +1,4 @@
-# AutoFertilizerPlugin
+# AutoFertilizer
 
 ![Static Badge](https://img.shields.io/badge/CLAUDE-VIBECODED?style=for-the-badge&logo=claude&label=VIBECODED&labelColor=%23333333&color=%23de7356)
 
@@ -8,7 +8,7 @@ box into your item box and keeps the fertilizers topped up with research points.
 replaces it and reads the same config file.
 
 > [!IMPORTANT]
-> Versions 1.1.0 and 1.2.0 haven't been run in the game. 1.0.0 was started in the game once, without a quest being
+> Versions 1.1.0 to 1.2.1 haven't been run in the game. 1.0.0 was started in the game once, without a quest being
 > played. Harvesting and fertilizing are covered by unit tests against a fake save. Check `AutoFertilizer.log`
 > after your first quests. If it never collects, set `HubOnly` to `false` and tell me.
 
@@ -59,7 +59,7 @@ The plugin doesn't change the game's code, so it needs no CRC bypass.
 
 1. Delete `MHW Auto Fertilizer Plugin.dll`, the original plugin, from `Monster Hunter World/nativePC/plugins/` if
    it's there. Keep `AutoFertilizer-config.json` if you like your settings.
-2. Download `AutoFertilizerPlugin-<version>.zip` from [Releases][releases] and unpack it into the
+2. Download `AutoFertilizer-<version>.zip` from [Releases][releases] and unpack it into the
    `Monster Hunter World` folder, or copy `AutoFertilizer.dll` and `AutoFertilizer-config.json` to
    `Monster Hunter World/nativePC/plugins/` yourself, or run `make install`.
 3. Start the game. The plugin writes `AutoFertilizer.log` next to the DLL.
@@ -67,7 +67,7 @@ The plugin doesn't change the game's code, so it needs no CRC bypass.
 A working session looks like this:
 
 ```text
-AutoFertilizer 1.2.0
+AutoFertilizer 1.2.1
 checking every 5000 ms while no quest is set, event prices off, missing fertilizers are bought
 [00:01:10] playing save slot 1 (Hunter)
 [00:03:40] a quest is set, waiting for it to end
@@ -172,4 +172,4 @@ Mods. No code or files of the original are in this repository.
 
 [original]: https://www.nexusmods.com/monsterhunterworld/mods/3626?tab=description
 [loader]: https://www.nexusmods.com/monsterhunterworld/mods/1982
-[releases]: https://github.com/TheElevatedOne/AutoFertilizerPlugin/releases
+[releases]: https://github.com/TheElevatedOne/AutoFertilizer/releases

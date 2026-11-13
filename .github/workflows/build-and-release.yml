@@ -57,7 +57,7 @@ jobs:
           # The zip unpacks into the game folder as it is.
           mkdir -p stage/nativePC/plugins dist
           cp "$dll" AutoFertilizer-config.json stage/nativePC/plugins/
-          (cd stage && zip -r "../dist/AutoFertilizerPlugin-$version.zip" nativePC)
+          (cd stage && zip -r "../dist/AutoFertilizer-$version.zip" nativePC)
           cp "$dll" AutoFertilizer-config.json dist/
           (cd dist && sha256sum * > SHA256SUMS)
           # Release notes: the top CHANGELOG entry, without its heading.
@@ -67,7 +67,7 @@ jobs:
         uses: ncipollo/release-action@v1.20.0
         with:
           artifacts: dist/*
-          name: ${{ steps.version.outputs.version }} - AutoFertilizerPlugin
+          name: ${{ steps.version.outputs.version }} - AutoFertilizer
           tag: ${{ steps.version.outputs.version }}
           commit: ${{ github.sha }}
           bodyFile: notes.md
