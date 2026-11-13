@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+- Added: `HubOnly` (`true` by default). While a quest is set, the plugin reads only the game's quest state, one
+  number per check, and leaves the save alone until the quest is over. Each change of the quest state still gets
+  one check. With `false` it checks during quests too, as before.
+
 ## 1.1.0
 
 - Fixed: when the game read the save at startup, the playtime of every slot jumped up, and the plugin took the

@@ -8,9 +8,9 @@ box into your item box and keeps the fertilizers topped up with research points.
 replaces it and reads the same config file.
 
 > [!IMPORTANT]
-> Version 1.1.0 hasn't been run in the game. 1.0.0 was started in the game once, without a quest being played.
-> Harvesting and fertilizing are covered by unit tests against a fake save. Check `AutoFertilizer.log` after your
-> first quests.
+> Versions 1.1.0 and 1.2.0 haven't been run in the game. 1.0.0 was started in the game once, without a quest being
+> played. Harvesting and fertilizing are covered by unit tests against a fake save. Check `AutoFertilizer.log`
+> after your first quests. If it never collects, set `HubOnly` to `false` and tell me.
 
 > [!WARNING]
 > The plugin changes your save in memory: research points, the fertilizer slots, the harvest box and the item box.
@@ -28,6 +28,8 @@ replaces it and reads the same config file.
 - **Buys the fertilizers you don't have** (types 2, 4, 6 and 8 in the save, the four the original plugin used),
   for 250 research points each, 500 for type 8, with 4 quests. Turn this off with `AddMissing`.
 - **Only spends points you have.** When you're short, nothing is changed and the log says what it needed.
+- **Stays out of the way during quests.** While a quest is set, it reads one number per check, the game's quest
+  state, and nothing else until the quest is over. Turn this off with `HubOnly`.
 - **Follows the hunter you play.** Switching characters or going back to the title screen is picked up on the
   next check.
 - **Writes a log**, `AutoFertilizer.log` next to the DLL, with every refill and collection.
@@ -65,9 +67,11 @@ The plugin doesn't change the game's code, so it needs no CRC bypass.
 A working session looks like this:
 
 ```text
-AutoFertilizer 1.1.0
-checking every 5000 ms, event prices off, missing fertilizers are bought
+AutoFertilizer 1.2.0
+checking every 5000 ms while no quest is set, event prices off, missing fertilizers are bought
 [00:01:10] playing save slot 1 (Hunter)
+[00:03:40] a quest is set, waiting for it to end
+[00:14:35] no quest any more, checking again
 [00:14:35] collected 37 items
 [00:52:05] fertilizer refilled for 600 research points (41250 left): type 2 x9, type 4 x9, type 6 x9, type 8 x9
 [00:52:05] collected 41 items
@@ -83,6 +87,7 @@ missing, and reads it at game start.
 | `CheckRate` | `5000` | Milliseconds between checks of the save, 500 at least |
 | `Event` | `false` | Half prices, for when the game's event discounts fertilizer. The original's file had `true` |
 | `AddMissing` | `true` | Buy the fertilizers the hunter doesn't have. With `false` only the ones in use are refilled |
+| `HubOnly` | `true` | Check the save only while no quest is set. With `false` it's checked during quests too |
 
 `Toggle` from the original's file is ignored, as the original ignored it.
 
@@ -125,6 +130,12 @@ then fertilizes and collects while holding the slot's critical section, the one 
 change the slot. It also does so once when it first sees a hunter, one check after, so a slot that's still being
 loaded is left alone.
 
+With `HubOnly`, each check first reads the quest state of `sQuest`, the game's quest manager (pointer at RVA
+`0x500ED30`, state at `+0x54`). It is 0 with no quest and 1 or more from the moment a quest is posted or joined
+until the game unsets it (its quest setter at RVA `0x1B51210` writes both). While the state is the same non-zero
+value as on the last check, the check ends there. A change of state gets one full check, so the harvest of a quest
+is picked up when the state moves on or goes back to 0. A console command always gets a full check.
+
 The slot is the one the game's index names. If another slot's playtime is the one counting up, a few seconds per
 check, that slot is used instead and the log says so. A save being loaded makes playtime jump by hours, which
 doesn't count.
@@ -132,6 +143,9 @@ doesn't count.
 ## Known issues
 
 - Not run in the game yet, see the note at the top.
+- With `HubOnly`, a posted quest counts as a quest, so nothing is checked in the hub between posting a quest and
+  leaving on it. Nothing changes in the harvest box in that time either.
+- One check takes well under a millisecond every `CheckRate`, on a thread of its own, so `HubOnly` saves little.
 - The item box and harvest box are changed in memory. If the item box is open while a check runs, it may show the
   old amounts until you reopen it.
 - Items go to the first 200 item box entries, the Items tab, as in the original.

@@ -14,6 +14,7 @@ This is a rewrite of [url=https://www.nexusmods.com/monsterhunterworld/mods/3626
 [*][b]Refills fertilizer before it runs out.[/b] Once any fertilizer has fewer than 5 quests left, all of them are refilled for 600 research points: +5 quests each, up to 9.
 [*][b]Buys the fertilizers you don't have[/b], for 250 research points each (500 for the last one), as the original did. You can turn this off.
 [*][b]Only spends points you have.[/b] When you're short, nothing is changed.
+[*][b]Stays out of the way during quests.[/b] While a quest is set, it only reads the game's quest state and leaves the save alone until the quest is over. You can turn this off.
 [*][b]Follows the hunter you play[/b], also after switching characters.
 [*][b]Writes a log[/b], [i]AutoFertilizer.log[/i], with every refill and collection.
 [/list]
@@ -57,6 +58,7 @@ The file is [i]AutoFertilizer-config.json[/i], next to the DLL. The mod creates 
 [*][b]CheckRate[/b] (default [i]5000[/i]): milliseconds between checks of the save, 500 at least.
 [*][b]Event[/b] (default [i]false[/i]): half prices, for when the game's event discounts fertilizer. The original's file had this on.
 [*][b]AddMissing[/b] (default [i]true[/i]): buy the fertilizers the hunter doesn't have. With false, only the ones in use are refilled.
+[*][b]HubOnly[/b] (default [i]true[/i]): check the save only while no quest is set. With false it's checked during quests too. Try false if the mod never collects.
 [/list]
 
 [b]Note:[/b] with AddMissing on, a hunter gets all four fertilizers as soon as they have the research points, whether or not the Botanical Research Center has offered them yet. Set it to false on a new character if you don't want that.
@@ -64,7 +66,7 @@ The file is [i]AutoFertilizer-config.json[/i], next to the DLL. The mod creates 
 [size=3][b]Known issues[/b][/size]
 
 [list]
-[*]Version 1.1.0 hasn't been run in the game yet; its rules are covered by unit tests against a fake save. Check the log after your first quests.
+[*]Versions 1.1.0 and 1.2.0 haven't been run in the game yet; its rules are covered by unit tests against a fake save. Check the log after your first quests.
 [*]If the item box is open while the mod collects, it may show the old amounts until you reopen it.
 [*]Items go to the Items tab of the item box, as in the original.
 [/list]

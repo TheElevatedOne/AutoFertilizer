@@ -6,6 +6,9 @@
 //! from a quest shows up as fertilizer quests going down or new items in the harvest box, and
 //! that's when the plugin fertilizes and collects.
 //!
+//! With `HubOnly`, the game's quest manager is asked first: while its quest state says a quest is
+//! set and hasn't changed since the last check, nothing else is read.
+//!
 //! The slot's critical section, which the game's menus take while they change the slot, is held
 //! for the whole check, so the game never sees a half-moved harvest.
 
@@ -14,6 +17,11 @@ use crate::farm::{self, Fertilizer, Item};
 /// Static pointer in `MonsterHunterWorld.exe` to the object that holds the save data pointer.
 pub const SAVE_ROOT_RVA: usize = 0x501_3950;
 const SAVE_PTR_OFFSET: usize = 0xA8;
+/// Static pointer to `sQuest`, the game's quest manager.
+pub const QUEST_ROOT_RVA: usize = 0x500_ED30;
+/// `sQuest`'s quest state: 0 with no quest, 1 once one is set (posted or joined), then higher as it
+/// runs and ends. The game's quest setter (RVA 0x1B51210) puts it back to 0 when the quest is unset.
+const QUEST_STATE: usize = 0x54;
 /// Index of the slot being played, in the same object.
 const SLOT_INDEX_OFFSET: usize = 0xA0;
 const SLOT_SIZE: usize = 0x26_CC00;
@@ -95,6 +103,15 @@ fn fertilizer_list(slots: &[Fertilizer; 4]) -> String {
     if list.is_empty() { "none".into() } else { list.join(", ") }
 }
 
+/// Where the game's static pointers are.
+#[derive(Clone, Copy)]
+pub struct Roots {
+    /// The pointer to the object that holds the save data.
+    pub save: usize,
+    /// The pointer to `sQuest`, or `None` to check during quests too.
+    pub quest: Option<usize>,
+}
+
 #[derive(Clone, Copy)]
 pub struct Settings {
     pub event: bool,
@@ -122,6 +139,8 @@ pub struct Tracker {
     playtime: [Option<u32>; SLOTS],
     /// Set once another slot's playtime counted up while the game's index pointed elsewhere.
     index_untrusted: bool,
+    /// The quest state at the last check, if it could be read.
+    quest_state: Option<u32>,
     fertilizer_total: Option<u32>,
     harvest_total: Option<u32>,
 }
@@ -136,7 +155,24 @@ impl Tracker {
     }
 
     fn reset(&mut self) {
-        *self = Self::default();
+        *self = Self { quest_state: self.quest_state, ..Self::default() };
+    }
+
+    /// Whether a quest is set and nothing about that changed since the last check. A change of
+    /// state always gets one check, so a state this plugin doesn't know can't stop it for good.
+    fn on_quest(&mut self, mem: &impl Memory, quest_root: usize, log: &mut impl FnMut(String)) -> bool {
+        let state = mem
+            .read_u64(quest_root)
+            .filter(|&p| p != 0)
+            .and_then(|p| mem.read_u32(p as usize + QUEST_STATE));
+        let before = std::mem::replace(&mut self.quest_state, state);
+        let busy = |s: Option<u32>| s.is_some_and(|s| s != 0);
+        if busy(state) && !busy(before) {
+            log("a quest is set, waiting for it to end".into());
+        } else if !busy(state) && busy(before) {
+            log("no quest any more, checking again".into());
+        }
+        busy(state) && state == before
     }
 
     /// Finds the save data and the slot being played. Returns false while there is none, and on
@@ -215,12 +251,18 @@ impl Tracker {
     pub fn tick(
         &mut self,
         mem: &mut impl Memory,
-        root: usize,
+        roots: Roots,
         settings: Settings,
         command: Option<Command>,
         log: &mut impl FnMut(String),
     ) {
-        if !self.locate(mem, root, settings, log) {
+        if let Some(quest_root) = roots.quest
+            && self.on_quest(mem, quest_root, log)
+            && command.is_none()
+        {
+            return;
+        }
+        if !self.locate(mem, roots.save, settings, log) {
             if command.is_some() {
                 log("no save slot is being played yet, try again in a moment".into());
             }
@@ -370,6 +412,8 @@ mod tests {
     const ROOT: usize = 0x1000;
     const HOLDER: usize = 0x2000;
     const SAVE: usize = 0x10_0000;
+    const QUEST_ROOT: usize = 0x3000;
+    const QUEST: usize = 0x4000;
 
     /// Sparse little-endian memory. Unwritten bytes read as zero inside the save, and fail outside.
     #[derive(Default)]
@@ -395,10 +439,14 @@ mod tests {
             let mut m = Self::default();
             m.write(ROOT, &(HOLDER as u64).to_le_bytes());
             m.write(HOLDER + SAVE_PTR_OFFSET, &(SAVE as u64).to_le_bytes());
+            m.write(QUEST_ROOT, &(QUEST as u64).to_le_bytes());
             for s in 0..SLOTS {
                 m.write(Self::slot(s) + HUNTER_NAME, format!("Hunter{s}").as_bytes());
             }
             m
+        }
+        fn set_quest_state(&mut self, state: u32) {
+            self.write_u32(QUEST + QUEST_STATE, state);
         }
         /// The game's index of the slot being played.
         fn set_index(&mut self, s: usize) {
@@ -442,7 +490,8 @@ mod tests {
     fn tick(t: &mut Tracker, m: &mut Fake, cmd: Option<Command>) -> Vec<String> {
         let mut lines = Vec::new();
         let settings = Settings { event: false, add_missing: true, max_step: 20 };
-        t.tick(m, ROOT, settings, cmd, &mut |l| lines.push(l));
+        let roots = Roots { save: ROOT, quest: Some(QUEST_ROOT) };
+        t.tick(m, roots, settings, cmd, &mut |l| lines.push(l));
         lines
     }
 
@@ -568,6 +617,52 @@ mod tests {
         tick(&mut t, &mut m, None);
         assert_eq!(t.slot(), None);
         assert_eq!(m.read_u32(Fake::slot(0) + RESEARCH_POINTS), Some(5000));
+    }
+
+    #[test]
+    fn waits_while_a_quest_is_set() {
+        let mut m = Fake::new();
+        m.set_ferts(0, [9, 9, 9, 9]);
+        let mut t = Tracker::default();
+        tick(&mut t, &mut m, None);
+        tick(&mut t, &mut m, None);
+
+        // Posted in the hub: one check for the change, then nothing.
+        m.set_quest_state(1);
+        let lines = tick(&mut t, &mut m, None);
+        assert_eq!(lines, vec!["a quest is set, waiting for it to end".to_string()]);
+        m.set(Fake::slot(0) + HARVEST_BOX, 300, 2);
+        assert!(tick(&mut t, &mut m, None).is_empty());
+        assert_eq!(m.get(Fake::slot(0) + HARVEST_BOX), (300, 2), "left alone during the quest");
+        // A command is still answered, with a full check.
+        let lines = tick(&mut t, &mut m, Some(Command::Remain));
+        assert_eq!(lines.len(), 2, "{lines:?}");
+        assert_eq!(m.get(Fake::slot(0) + ITEM_BOX), (300, 2));
+
+        // The quest runs and ends; its state moving on gets a check each time.
+        m.set_quest_state(2);
+        m.quest(0, &[(300, 3)]);
+        tick(&mut t, &mut m, None);
+        assert_eq!(m.get(Fake::slot(0) + ITEM_BOX), (300, 5));
+
+        // Back in the hub.
+        m.set_quest_state(0);
+        m.set(Fake::slot(0) + HARVEST_BOX, 300, 1);
+        let lines = tick(&mut t, &mut m, None);
+        assert_eq!(lines, vec!["no quest any more, checking again".to_string(), "collected 1 items".to_string()]);
+    }
+
+    #[test]
+    fn an_unreadable_quest_state_does_not_stop_the_checks() {
+        let mut m = Fake::new();
+        m.write(QUEST_ROOT, &0u64.to_le_bytes());
+        m.set_ferts(0, [9, 9, 9, 9]);
+        let mut t = Tracker::default();
+        tick(&mut t, &mut m, None);
+        tick(&mut t, &mut m, None);
+        m.quest(0, &[(300, 3)]);
+        tick(&mut t, &mut m, None);
+        assert_eq!(m.get(Fake::slot(0) + ITEM_BOX), (300, 3));
     }
 
     #[test]

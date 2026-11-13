@@ -1,5 +1,6 @@
 {
     "CheckRate": 5000,
     "Event": false,
-    "AddMissing": true
+    "AddMissing": true,
+    "HubOnly": true
 }

@@ -1,5 +1,5 @@
 //! `AutoFertilizer-config.json`, next to the DLL. Same file and keys as the original plugin, plus
-//! `AddMissing`; written with the defaults if it doesn't exist.
+//! `AddMissing` and `HubOnly`; written with the defaults if it doesn't exist.
 
 use std::{fs, path::Path};
 
@@ -17,12 +17,14 @@ pub struct Config {
     pub event: bool,
     /// Buy the fertilizers a hunter doesn't have. The original always did.
     pub add_missing: bool,
+    /// Check only while no quest is set, so nothing is read during a hunt.
+    pub hub_only: bool,
     // `Toggle` is in the original file but the original never read it, so it's ignored here too.
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Self { check_rate: 5_000, event: false, add_missing: true }
+        Self { check_rate: 5_000, event: false, add_missing: true, hub_only: true }
     }
 }
 

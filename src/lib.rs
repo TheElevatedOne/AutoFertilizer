@@ -29,7 +29,7 @@ mod plugin {
     use crate::{
         config::Config,
         console::{Console, Request},
-        game::{Memory, SAVE_ROOT_RVA, Settings, Tracker},
+        game::{Memory, QUEST_ROOT_RVA, Roots, SAVE_ROOT_RVA, Settings, Tracker},
         log,
     };
 
@@ -97,7 +97,8 @@ mod plugin {
             let settings = Settings { event: config.event, add_missing: config.add_missing, max_step };
             let mut lines = Vec::new();
             let result = panic::catch_unwind(AssertUnwindSafe(|| {
-                tracker.tick(&mut memory, base + SAVE_ROOT_RVA, settings, command, &mut |l| lines.push(l));
+                let roots = Roots { save: base + SAVE_ROOT_RVA, quest: config.hub_only.then_some(base + QUEST_ROOT_RVA) };
+                tracker.tick(&mut memory, roots, settings, command, &mut |l| lines.push(l));
             }));
             if result.is_err() {
                 tracker = Tracker::default();
@@ -119,8 +120,9 @@ mod plugin {
             log!("{problem}");
         }
         log!(
-            "checking every {} ms, event prices {}, missing fertilizers {}",
+            "checking every {} ms{}, event prices {}, missing fertilizers {}",
             config.check_rate,
+            if config.hub_only { " while no quest is set" } else { "" },
             if config.event { "on" } else { "off" },
             if config.add_missing { "are bought" } else { "are left alone" }
         );
