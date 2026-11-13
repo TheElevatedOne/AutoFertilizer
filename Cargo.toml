@@ -1,0 +1,31 @@
+[package]
+name = "AutoFertilizer"
+version = "1.1.0"
+edition = "2024"
+description = "Monster Hunter: World plugin for Stracker's Loader: collects the Botanical Research harvest box and keeps fertilizer topped up"
+publish = false
+
+[lib]
+name = "AutoFertilizer"
+crate-type = ["cdylib"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Kernel",
+    "Win32_System_Memory",
+    "Win32_System_Threading",
+] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+opt-level = "s"
+# A panic must only stop this plugin, never the game.
+panic = "unwind"

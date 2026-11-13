@@ -1,0 +1,5 @@
+{
+    "CheckRate": 5000,
+    "Event": false,
+    "AddMissing": true
+}

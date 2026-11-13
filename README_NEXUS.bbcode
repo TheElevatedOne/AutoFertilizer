@@ -1,0 +1,78 @@
+[img]https://img.shields.io/badge/CLAUDE-VIBECODED?style=for-the-badge&logo=claude&label=VIBECODED&labelColor=%23333333&color=%23de7356[/img]
+
+[size=4][b]Auto Fertilizer Plugin (Rewrite)[/b][/size]
+
+After every quest, moves the [b]Botanical Research[/b] harvest box into your item box and keeps the fertilizers topped up with research points.
+
+This is a rewrite of [url=https://www.nexusmods.com/monsterhunterworld/mods/3626?tab=description]Auto Fertilizer Plugin[/url], which sometimes stopped working. It replaces the original and reads the same config file. All credit for the idea goes to the original's author.
+
+[size=3][b]What it does[/b][/size]
+
+[list]
+[*][b]Collects after every quest.[/b] The harvest box goes into the item box: onto the item's stack if you have one, else into a free slot.
+[*][b]Never throws items away.[/b] What doesn't fit in the item box stays in the harvest box.
+[*][b]Refills fertilizer before it runs out.[/b] Once any fertilizer has fewer than 5 quests left, all of them are refilled for 600 research points: +5 quests each, up to 9.
+[*][b]Buys the fertilizers you don't have[/b], for 250 research points each (500 for the last one), as the original did. You can turn this off.
+[*][b]Only spends points you have.[/b] When you're short, nothing is changed.
+[*][b]Follows the hunter you play[/b], also after switching characters.
+[*][b]Writes a log[/b], [i]AutoFertilizer.log[/i], with every refill and collection.
+[/list]
+
+[size=3][b]What's fixed over the original[/b][/size]
+
+[list]
+[*]The original collected only when fertilizer was refilled, about one quest in five. This one collects after every quest.
+[*]The original worked out your save slot once, 30 seconds after launch. This one checks it all the time.
+[*]The original cleared the harvest box even when the item box was full. This one leaves what doesn't fit.
+[*]The original could spend research points you don't have.
+[*]The original read save data without checking it was loaded, which could crash the game.
+[*]The original changed the save without the game's lock. This one holds the save slot's lock while it works.
+[/list]
+
+[size=3][b]Requirements[/b][/size]
+
+[list]
+[*]Monster Hunter: World: Iceborne, game version [b]15.23.00[/b]. On any other version the mod writes the mismatch to its log and changes nothing.
+[*][url=https://www.nexusmods.com/monsterhunterworld/mods/1982]Stracker's Loader[/url]
+[/list]
+
+No CRC bypass is needed; the mod doesn't change the game's code.
+
+[size=3][b]Installation[/b][/size]
+
+[list=1]
+[*]Back up your save. The mod changes research points, fertilizer, the harvest box and the item box.
+[*]Delete the original [b]MHW Auto Fertilizer Plugin.dll[/b] from [i]Monster Hunter World/nativePC/plugins/[/i] if you have it. The two must not run together.
+[*]Unpack the zip into the [i]Monster Hunter World[/i] folder, so that [b]AutoFertilizer.dll[/b] and [b]AutoFertilizer-config.json[/b] land in [i]nativePC/plugins/[/i].
+[*]Start the game. After you load a hunter, [i]AutoFertilizer.log[/i] next to the DLL should say "playing save slot 1 (your hunter's name)".
+[/list]
+
+To uninstall, delete the DLL, the config and the log.
+
+[size=3][b]Configuration[/b][/size]
+
+The file is [i]AutoFertilizer-config.json[/i], next to the DLL. The mod creates it with the defaults if it's missing, and reads it when the game starts.
+
+[list]
+[*][b]CheckRate[/b] (default [i]5000[/i]): milliseconds between checks of the save, 500 at least.
+[*][b]Event[/b] (default [i]false[/i]): half prices, for when the game's event discounts fertilizer. The original's file had this on.
+[*][b]AddMissing[/b] (default [i]true[/i]): buy the fertilizers the hunter doesn't have. With false, only the ones in use are refilled.
+[/list]
+
+[b]Note:[/b] with AddMissing on, a hunter gets all four fertilizers as soon as they have the research points, whether or not the Botanical Research Center has offered them yet. Set it to false on a new character if you don't want that.
+
+[size=3][b]Known issues[/b][/size]
+
+[list]
+[*]Version 1.1.0 hasn't been run in the game yet; its rules are covered by unit tests against a fake save. Check the log after your first quests.
+[*]If the item box is open while the mod collects, it may show the old amounts until you reopen it.
+[*]Items go to the Items tab of the item box, as in the original.
+[/list]
+
+[size=3][b]Source[/b][/size]
+
+[url=https://github.com/TheElevatedOne/AutoFertilizerPlugin]github.com/TheElevatedOne/AutoFertilizerPlugin[/url], written in Rust. No code or files of the original are in it.
+
+[size=3][b]Bugs and questions[/b][/size]
+
+Post in the [b]Posts[/b] tab, or file a bug in the [b]Bugs[/b] tab. For bugs, attach [i]AutoFertilizer.log[/i] from the plugins folder and say what you did before it happened.

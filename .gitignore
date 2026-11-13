@@ -1,0 +1,5 @@
+/target
+/dist
+# The original plugin, as downloaded.
+/nativePC
+/*.zip
