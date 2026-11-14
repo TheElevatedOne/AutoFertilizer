@@ -7,11 +7,6 @@ box into your item box and keeps the fertilizers topped up with research points.
 [Auto Fertilizer Plugin][original] by its original author on Nexus Mods, which sometimes stopped working; this one
 replaces it and reads the same config file.
 
-> [!IMPORTANT]
-> Versions 1.1.0 to 1.2.1 haven't been run in the game. 1.0.0 was started in the game once, without a quest being
-> played. Harvesting and fertilizing are covered by unit tests against a fake save. Check `AutoFertilizer.log`
-> after your first quests. If it never collects, set `HubOnly` to `false` and tell me.
-
 > [!WARNING]
 > The plugin changes your save in memory: research points, the fertilizer slots, the harvest box and the item box.
 > Back up your save first, like with any plugin that touches it. Remove the original
@@ -142,7 +137,6 @@ doesn't count.
 
 ## Known issues
 
-- Not run in the game yet, see the note at the top.
 - With `HubOnly`, a posted quest counts as a quest, so nothing is checked in the hub between posting a quest and
   leaving on it. Nothing changes in the harvest box in that time either.
 - One check takes well under a millisecond every `CheckRate`, on a thread of its own, so `HubOnly` saves little.
